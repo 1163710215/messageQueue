@@ -9,11 +9,11 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.concurrent.SynchronousQueue;
 
 public class NetConnection implements Runnable {
     static ArrayList<MessageQueue> messageQueues = new ArrayList<>();
     static ArrayList<Observer> observers = new ArrayList<>();
-    NetConnection netConnection;
     ServerSocket serverSocket;
     int port = 6666;
 
@@ -27,7 +27,6 @@ public class NetConnection implements Runnable {
 
     public static void main(String[] args) {
         try {
-            new NetConnection();
             Runnable myRunnable1 = new NetConnection(6666);
             Runnable myRunnable2 = new NetConnection(6667);
             Runnable myRunnable3 = new NetConnection(6668);
@@ -64,10 +63,13 @@ public class NetConnection implements Runnable {
                         break;
                     }
                 }
-                if (observer == null) {
-                    observer = new ObserverEntity(remoteAddress);
-                    observers.add(observer);
+                synchronized (observers) {
+                    if (observer == null) {
+                        observer = new ObserverEntity(remoteAddress);
+                        observers.add(observer);
+                    }
                 }
+
                 DataInputStream inputStream = new DataInputStream(socket.getInputStream());
                 String message = null;
                 do {
@@ -75,15 +77,18 @@ public class NetConnection implements Runnable {
                     if (message.equals("send")) {
                         String queueName = inputStream.readUTF();
                         MessageQueueEntity mqe = null;
-                        for (MessageQueue mq : messageQueues) {
-                            if (mq.name.equals(queueName)) {
-                                mqe = (MessageQueueEntity) mq;
-                                break;
+                        synchronized (messageQueues) {
+                            for (MessageQueue mq : messageQueues) {
+                                if (mq.name.equals(queueName)) {
+                                    mqe = (MessageQueueEntity) mq;
+                                    break;
+                                }
                             }
-                        }
-                        if (mqe == null) {
-                            mqe = new MessageQueueEntity(queueName);
-                            messageQueues.add(mqe);
+
+                            if (mqe == null) {
+                                mqe = new MessageQueueEntity(queueName);
+                                messageQueues.add(mqe);
+                            }
                         }
                         String toSend = inputStream.readUTF();
                         mqe.setSupperContent(toSend);
@@ -92,27 +97,33 @@ public class NetConnection implements Runnable {
                     } else if (message.equals("subscribe")) {
                         String queueName = inputStream.readUTF();
                         MessageQueueEntity mqe = null;
-                        for (MessageQueue mq : messageQueues) {
-                            if (mq.name.equals(queueName)) {
-                                mqe = (MessageQueueEntity) mq;
-                                break;
+                        synchronized (messageQueues) {
+                            for (MessageQueue mq : messageQueues) {
+                                if (mq.name.equals(queueName)) {
+                                    mqe = (MessageQueueEntity) mq;
+                                    break;
+                                }
                             }
-                        }
-                        if (mqe == null) {
-                            mqe = new MessageQueueEntity(queueName);
-                            messageQueues.add(mqe);
+
+                            if (mqe == null) {
+                                mqe = new MessageQueueEntity(queueName);
+                                messageQueues.add(mqe);
+                            }
                         }
                         mqe.attach(observer);
                         System.out.println(observer.getObserverName() + " attach " + queueName);
                     } else if (message.equals("unsubscribe")) {
                         String queueName = inputStream.readUTF();
                         MessageQueueEntity mqe = null;
-                        for (MessageQueue mq : messageQueues) {
-                            if (mq.name.equals(queueName)) {
-                                mqe = (MessageQueueEntity) mq;
-                                break;
+                        synchronized (messageQueues) {
+                            for (MessageQueue mq : messageQueues) {
+                                if (mq.name.equals(queueName)) {
+                                    mqe = (MessageQueueEntity) mq;
+                                    break;
+                                }
                             }
                         }
+
                         if (mqe == null) {
                             continue;
                         }
