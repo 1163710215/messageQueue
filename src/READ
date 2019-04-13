@@ -1,0 +1,7 @@
+producer:
+    send message:   send   queueName    message
+
+consumer:
+    subscription:   subscribe   queueName
+    cancel subscription: unsubscribe    queueName
+    getMessages:    getMessages
