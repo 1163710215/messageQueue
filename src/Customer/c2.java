@@ -25,11 +25,12 @@ public class c2 {
                     String message = scanner.nextLine();
                     if (message.equals("getMessages")) {
                         out.writeUTF(message);
-                        String receive = null;
+                        String receive = "";
                         do {
-                            receive = in.readUTF();
                             System.out.println(receive);
-                        } while (receive != null);
+                            receive = in.readUTF();
+
+                        } while (!receive.equals("end"));
                     } else if (message.equals("send")) {
 
                         String queue = scanner.nextLine();
@@ -50,6 +51,7 @@ public class c2 {
                         break;
                     } else {
                         out.writeUTF(message);
+                        System.out.println("input error");
                         System.out.println(in.readUTF());
 
                     }

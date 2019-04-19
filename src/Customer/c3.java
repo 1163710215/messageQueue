@@ -25,11 +25,12 @@ public class c3 {
                     String message = scanner.nextLine();
                     if (message.equals("getMessages")) {
                         out.writeUTF(message);
-                        String receive = null;
+                        String receive = "";
                         do {
-                            receive = in.readUTF();
                             System.out.println(receive);
-                        } while (receive != null);
+                            receive = in.readUTF();
+
+                        } while (!receive.equals("end"));
                     } else if (message.equals("send")) {
 
                         String queue = scanner.nextLine();

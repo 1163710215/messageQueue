@@ -134,10 +134,11 @@ public class NetConnection implements Runnable {
                     } else if (message.equals("getMessages")) {
                         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
                         for (String s : ((ObserverEntity) observer).getMessages()) {
-                            out.writeUTF(s + '\n');
+                            out.writeUTF(s);
                             System.out.println(observer.getObserverName() + " fetch message: " + s);
 
                         }
+                        out.writeUTF("end");
                         System.out.println(observer.getObserverName() + " fetch messages over");
 
 
